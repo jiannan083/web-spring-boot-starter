@@ -5,6 +5,7 @@ import cn.bfay.web.result.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.converter.HttpMessageNotWritableException;
 import org.springframework.web.HttpMediaTypeNotAcceptableException;
@@ -14,12 +15,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import javax.websocket.DecodeException;
+import java.util.Set;
 
 /**
  * 全局异常处理类.
@@ -70,7 +72,7 @@ public class GlobalExceptionHandler {// extends ResponseEntityExceptionHandler
      * @param e 异常.
      * @return {@link Result}
      */
-    @ExceptionHandler( {MissingServletRequestParameterException.class, TypeMismatchException.class, HttpMessageNotReadableException.class})
+    @ExceptionHandler({MissingServletRequestParameterException.class, TypeMismatchException.class, HttpMessageNotReadableException.class})
     public Result requestMissingServletRequestParameter(Exception e) {
         log.warn("", e);
         return Result.buildError(400, "Bad Request");
@@ -130,7 +132,7 @@ public class GlobalExceptionHandler {// extends ResponseEntityExceptionHandler
      * @param e 异常.
      * @return {@link Result}
      */
-    @ExceptionHandler( {ConversionNotSupportedException.class, HttpMessageNotWritableException.class})
+    @ExceptionHandler({ConversionNotSupportedException.class, HttpMessageNotWritableException.class})
     public Result server500(Exception e) {
         log.warn("", e);
         return Result.buildError(500, "Internal Server Error");
@@ -175,13 +177,13 @@ public class GlobalExceptionHandler {// extends ResponseEntityExceptionHandler
      * @return {@link Result}
      */
     @ExceptionHandler(DecodeException.class)
-    //@ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Object handleException(DecodeException ex) {
-        if (ex.getCause() instanceof SystemException) {
+        if (ex.getCause() instanceof BizException) {
             return Result.buildError(
-                ((SystemException) ex.getCause()).getCode(),
-                ((SystemException) ex.getCause()).getMessage()
+                    ((BizException) ex.getCause()).getCode(),
+                    ((BizException) ex.getCause()).getMessage()
             );
         } else {
             log.error(ex.getMessage(), ex);
@@ -194,14 +196,10 @@ public class GlobalExceptionHandler {// extends ResponseEntityExceptionHandler
      *
      * @return {@link Result}
      */
-    //@ResponseStatus(HttpStatus.OK)
-    @ExceptionHandler(SystemException.class)
-    public Result bfayException(SystemException e) {
-        if (String.valueOf(e.getCode()).startsWith("101")) {
-            log.warn("业务错误{},{}", e.getCode(), e.getMessage());
-        } else {
-            log.error("", e);
-        }
+    @ResponseStatus(HttpStatus.OK)
+    @ExceptionHandler(BizException.class)
+    public Result bfayException(BizException e) {
+        log.error("", e);
         return Result.buildError(e.getCode(), e.getMessage());
     }
 
@@ -210,7 +208,7 @@ public class GlobalExceptionHandler {// extends ResponseEntityExceptionHandler
      *
      * @return {@link Result}
      */
-    //@ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.OK)
     @ExceptionHandler(Exception.class)
     public Result exception(Exception e) {
         log.error("", e);

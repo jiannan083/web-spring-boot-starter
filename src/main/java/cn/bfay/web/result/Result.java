@@ -10,17 +10,13 @@ import java.io.Serializable;
  *
  * @author wangjiannan
  */
-//@ApiModel(description = "操作结果集")
 @Data
 public class Result implements Serializable {
     private static final long serialVersionUID = -7529630554309028207L;
-    //@ApiModelProperty(value = "返回码")
     private int code;
 
-    //@ApiModelProperty(value = "描述")
     private String message;
 
-    //@ApiModelProperty(value = "数据")
     private Object data;
 
     private static Result build(int code, String message, Object data) {

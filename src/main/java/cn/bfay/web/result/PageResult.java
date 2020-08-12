@@ -17,18 +17,28 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PageResult<T> {
-    //@ApiModelProperty(value = "页码")
+    /**
+     * 页码
+     */
     private int currentPage;
 
-    //@ApiModelProperty(value = "页面记录数")
+    /**
+     * 页面记录数
+     */
     private int pageSize;
 
-    //@ApiModelProperty(value = "总页数")
+    /**
+     * 总页数
+     */
     private int totalPage;
 
-    //@ApiModelProperty(value = "总记录数")
+    /**
+     * 总记录数
+     */
     private long totalCount;
 
-    //@ApiModelProperty(value = "分页数据")
+    /**
+     * 分页数据
+     */
     private List<T> list = new ArrayList<>();
 }
