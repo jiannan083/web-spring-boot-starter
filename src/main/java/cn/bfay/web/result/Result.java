@@ -1,5 +1,6 @@
 package cn.bfay.web.result;
 
+import cn.bfay.web.exception.enums.SystemError;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -36,7 +37,7 @@ public class Result implements Serializable {
      * @return {@link Result}
      */
     public static Result buildSuccess() {
-        return build(0, "成功", null);
+        return build(SystemError.SUCCESS.getCode(), SystemError.SUCCESS.getMessage(), null);
     }
 
     /**
@@ -46,7 +47,7 @@ public class Result implements Serializable {
      * @return {@link Result}
      */
     public static Result buildSuccess(Object data) {
-        return build(0, "成功", data);
+        return build(SystemError.SUCCESS.getCode(), SystemError.SUCCESS.getMessage(), data);
     }
 
     /**

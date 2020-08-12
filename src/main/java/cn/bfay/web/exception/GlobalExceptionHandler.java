@@ -178,10 +178,10 @@ public class GlobalExceptionHandler {// extends ResponseEntityExceptionHandler
     //@ResponseStatus(HttpStatus.OK)
     @ResponseBody
     public Object handleException(DecodeException ex) {
-        if (ex.getCause() instanceof BfayException) {
+        if (ex.getCause() instanceof SystemException) {
             return Result.buildError(
-                ((BfayException) ex.getCause()).getCode(),
-                ((BfayException) ex.getCause()).getMessage()
+                ((SystemException) ex.getCause()).getCode(),
+                ((SystemException) ex.getCause()).getMessage()
             );
         } else {
             log.error(ex.getMessage(), ex);
@@ -195,8 +195,8 @@ public class GlobalExceptionHandler {// extends ResponseEntityExceptionHandler
      * @return {@link Result}
      */
     //@ResponseStatus(HttpStatus.OK)
-    @ExceptionHandler(BfayException.class)
-    public Result bfayException(BfayException e) {
+    @ExceptionHandler(SystemException.class)
+    public Result bfayException(SystemException e) {
         if (String.valueOf(e.getCode()).startsWith("101")) {
             log.warn("业务错误{},{}", e.getCode(), e.getMessage());
         } else {

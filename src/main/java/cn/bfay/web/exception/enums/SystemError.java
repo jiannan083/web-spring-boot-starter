@@ -4,7 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 系统错误(9).
+ * 系统错误.
  *
  * @author wangjiannan
  */
@@ -12,7 +12,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum SystemError implements ErrorType {
 
-    SYSTEM_ERROR(999999, "系统错误");
+    SUCCESS(0, "success"),
+    SYSTEM_ERROR(-1, "系统错误");
 
     private int code;
     private String message;
