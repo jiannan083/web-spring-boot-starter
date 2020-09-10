@@ -2,7 +2,9 @@ package cn.bfay.web.result;
 
 import java.util.ArrayList;
 import java.util.List;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 
 /**
@@ -12,6 +14,8 @@ import org.springframework.beans.BeanUtils;
  * @since 2020/7/28
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class PageResult<E> {
     /**
      * 页码.

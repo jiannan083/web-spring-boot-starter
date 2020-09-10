@@ -17,5 +17,5 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ListResult<T> {
-    private List<T> list = new ArrayList<>();
+    private List<T> items = new ArrayList<>();
 }
