@@ -1,15 +1,5 @@
 package cn.bfay.web.filter;
 
-import cn.bfay.web.util.WebUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.util.ContentCachingRequestWrapper;
-import org.springframework.web.util.ContentCachingResponseWrapper;
-
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +11,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import cn.bfay.web.autoconfigure.WebProperties;
+import cn.bfay.web.util.WebUtils;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+import org.springframework.web.util.ContentCachingResponseWrapper;
 
 /**
  * TraceLoggingFilter.
@@ -29,14 +29,19 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 public class TraceLoggingFilter extends OncePerRequestFilter {
-    private static final String TRACE_ID = "TRACE_ID";
     private static final Set<String> EXCLUDE_URL = new HashSet<>(24);
     private static final int[] HTTP_SUCCESS_CODE = new int[4];
-    private static final String RESULT_CODE = "errCode";
+    private static final String RESULT_CODE = "code";
     private static final String SUCCESS = "SUCCESS";
     private static final String FAILED = "FAILED";
 
     public TraceLoggingFilter() {
+    }
+
+    private WebProperties webProperties;
+
+    public TraceLoggingFilter(WebProperties webProperties) {
+        this.webProperties = webProperties;
     }
 
     private String contxtPath;
@@ -67,7 +72,7 @@ public class TraceLoggingFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-            throws ServletException, IOException {
+        throws ServletException, IOException {
         boolean isFirstRequest = !isAsyncDispatch(request);
         HttpServletRequest requestToUse = request;
         HttpServletResponse responseToUse = response;
@@ -87,10 +92,10 @@ public class TraceLoggingFilter extends OncePerRequestFilter {
         } finally {
             elapsedTime = System.currentTimeMillis() - startTime.getTime();
             ContentCachingResponseWrapper wrapper =
-                    WebUtils.getNativeResponse(responseToUse, ContentCachingResponseWrapper.class);
+                WebUtils.getNativeResponse(responseToUse, ContentCachingResponseWrapper.class);
             if (isFirstRequest && !isAsyncStarted(requestToUse) && shouldLog(request)) {
                 printLog(WebUtils.getNativeRequest(requestToUse, ContentCachingRequestWrapper.class), wrapper,
-                        elapsedTime);
+                    elapsedTime);
             }
             if (wrapper != null) {
                 wrapper.copyBodyToResponse();
@@ -101,7 +106,7 @@ public class TraceLoggingFilter extends OncePerRequestFilter {
     private boolean shouldLog(HttpServletRequest request) {
         String url = request.getRequestURI();
         String contextPath = request.getServletContext().getContextPath();
-        boolean[] shouldLog = new boolean[]{true};
+        boolean[] shouldLog = new boolean[] {true};
         EXCLUDE_URL.forEach(uurl -> {
             if (url.startsWith(contextPath.concat(uurl))) {
                 shouldLog[0] = false;
@@ -121,44 +126,45 @@ public class TraceLoggingFilter extends OncePerRequestFilter {
             String localIp = request.getLocalAddr();
             String inputParamOri = getRequestString(request);
             String headersOri = WebUtils.getHeadersJson(request);
-            String userid = WebUtils.getCookieValue(request, "userid");
+            String userid = WebUtils.findParamValue(request, webProperties.getUserSign());
             userid = StringUtils.isBlank(userid) ? "unknown-userid" : userid;
 
             String outParamOri = getResponseString(response);
-            int resultCode = getResultCode(outParamOri, response);
+            String resultCode = getResultCode(outParamOri, response);
 
-            String logStatus = (0 == resultCode) ? SUCCESS : FAILED;
+            String logStatus = StringUtils.equalsAnyIgnoreCase("0", resultCode) ? SUCCESS : FAILED;
 
             //格式:issuccess|userid|calltype[HTTP|RPC]|httpmethod|url|retcode|method|etime
             // |sourceip|localIp|req|resp|headers
             String accessTokenFomat = "{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}|{}";
             log.info(accessTokenFomat,
-                    logStatus,
-                    userid,
-                    "HTTP",
-                    httpMethod,
-                    url,
-                    String.valueOf(resultCode),
-                    callMethod,
-                    String.valueOf(elapsedTime),
-                    callIp,
-                    localIp,
-                    inputParamOri,
-                    outParamOri,
-                    headersOri);
+                logStatus,
+                userid,
+                "HTTP",
+                httpMethod,
+                url,
+                resultCode,
+                callMethod,
+                elapsedTime,
+                callIp,
+                localIp,
+                inputParamOri,
+                outParamOri,
+                headersOri);
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
 
     }
 
-    private int getResultCode(String outParamOri, HttpServletResponse response) {
-        Pattern pattern = Pattern.compile("\"" + RESULT_CODE + "\":\"(\\d+)\"");
+    private String getResultCode(String outParamOri, HttpServletResponse response) {
+        // Pattern pattern = Pattern.compile("\"" + RESULT_CODE + "\":\"(\\d+)\"");
+        Pattern pattern = Pattern.compile("\"" + RESULT_CODE + "\":\"(\\w+)\"");
         Matcher matcher = pattern.matcher(outParamOri);
         if (matcher.find()) {
-            return Integer.parseInt(matcher.group(1));
+            return matcher.group(1);
         } else {
-            return isHttpSucceed(response.getStatus()) ? 0 : response.getStatus();
+            return isHttpSucceed(response.getStatus()) ? "0" : String.valueOf(response.getStatus());
         }
     }
 
@@ -188,7 +194,7 @@ public class TraceLoggingFilter extends OncePerRequestFilter {
         return payload;
     }
 
-    private String getResponseString(ContentCachingResponseWrapper response) throws IOException {
+    private String getResponseString(ContentCachingResponseWrapper response) {
         if (response != null) {
             if (shouldPrintContent(response)) {
                 byte[] buf = response.getContentAsByteArray();
@@ -215,8 +221,8 @@ public class TraceLoggingFilter extends OncePerRequestFilter {
         if (null != contentType) {
             MediaType mediaType = MediaType.parseMediaType(contentType);
             return MediaType.APPLICATION_JSON.includes(mediaType)
-                    || contentType.startsWith(MediaType.TEXT_HTML_VALUE)
-                    || contentType.startsWith(MediaType.TEXT_PLAIN_VALUE);
+                || contentType.startsWith(MediaType.TEXT_HTML_VALUE)
+                || contentType.startsWith(MediaType.TEXT_PLAIN_VALUE);
         } else {
             return false;
         }

@@ -1,12 +1,15 @@
 package cn.bfay.web.support;
 
+import javax.annotation.Resource;
+import cn.bfay.web.autoconfigure.WebProperties;
 import cn.bfay.web.filter.HttpServletRequestReplacedFilter;
 import cn.bfay.web.filter.TraceLoggingFilter;
 import cn.bfay.web.filter.XssAntiFilter;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -18,9 +21,12 @@ import org.springframework.web.filter.CorsFilter;
  * @author wangjiannan
  * @since 2019/10/25
  */
-@Configuration
+@Slf4j
 public class FilterAutoConfig {
-    private Integer order = Ordered.HIGHEST_PRECEDENCE + 6;
+    private final Integer order = Ordered.HIGHEST_PRECEDENCE + 6;
+
+    @Resource
+    private WebProperties webProperties;
 
     /**
      * 可读httprequest filter.
@@ -45,7 +51,7 @@ public class FilterAutoConfig {
     @Bean
     public FilterRegistrationBean<TraceLoggingFilter> traceLogFilter() {
         FilterRegistrationBean<TraceLoggingFilter> filterRegBean = new FilterRegistrationBean<>();
-        filterRegBean.setFilter(new TraceLoggingFilter());
+        filterRegBean.setFilter(new TraceLoggingFilter(webProperties));
         filterRegBean.addUrlPatterns("/*");
         filterRegBean.setOrder(order + 2);
         return filterRegBean;
@@ -65,18 +71,20 @@ public class FilterAutoConfig {
         return filterRegBean;
     }
 
-    @Value("${cors.allowed-origin:all}")
-    private String corsAllowedOrigin;
-
     @Bean
+    @ConditionalOnProperty(prefix = "szyx.web", value = "cors-enabled", havingValue = "true")
     public FilterRegistrationBean<CorsFilter> corsFilterRegistrationBean() {
-        String allowedOrigins = "*";
-        if (!corsAllowedOrigin.equalsIgnoreCase("all")) {
-            allowedOrigins = corsAllowedOrigin;
-        }
-
+        String corsAllowedOrigin = webProperties.getCorsAllowedOrigin();
         CorsConfiguration config = new CorsConfiguration();
-        config.addAllowedOrigin(allowedOrigins);
+        boolean value = StringUtils.isBlank(corsAllowedOrigin) || corsAllowedOrigin.equalsIgnoreCase("*");
+        if (value) {
+            config.addAllowedOrigin("*");
+        } else {
+            String[] origins = corsAllowedOrigin.split(",");
+            for (String origin : origins) {
+                config.addAllowedOrigin(origin);
+            }
+        }
         config.setAllowCredentials(false);
         config.addAllowedMethod("*");
         //config.addAllowedHeader("*");
@@ -86,6 +94,7 @@ public class FilterAutoConfig {
         FilterRegistrationBean<CorsFilter> filterRegBean = new FilterRegistrationBean<>();
         filterRegBean.setFilter(new CorsFilter(configSource));
         filterRegBean.setOrder(order);
+        log.info(">>>Init cors and allowed origin \"{}\"", value ? "*" : corsAllowedOrigin);
         return filterRegBean;
     }
 }

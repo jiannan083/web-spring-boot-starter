@@ -7,7 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
- * BizException,业务错误使用，打印error日志.
+ * BizBaseException,登录失败等错误使用，打印warn日志.
  *
  * @author wangjiannan
  */
@@ -15,12 +15,12 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class BizException extends RuntimeException {
+public class BizBaseException extends RuntimeException {
     private String code;
 
     private String message;
 
-    public BizException(ErrorType errorType) {
+    public BizBaseException(ErrorType errorType) {
         super(errorType.getMessage());
         this.setCode(errorType.getCode());
         this.setMessage(errorType.getMessage());

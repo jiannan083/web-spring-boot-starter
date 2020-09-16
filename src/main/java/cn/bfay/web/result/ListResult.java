@@ -1,11 +1,10 @@
 package cn.bfay.web.result;
 
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 列表返回结果.
@@ -17,5 +16,8 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ListResult<T> {
+    /**
+     * 数据项.
+     */
     private List<T> items = new ArrayList<>();
 }

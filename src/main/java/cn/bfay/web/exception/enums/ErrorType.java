@@ -6,8 +6,7 @@ package cn.bfay.web.exception.enums;
  * @author wangjiannan
  */
 public interface ErrorType {
-
-    int getCode();
+    String getCode();
 
     String getMessage();
 }

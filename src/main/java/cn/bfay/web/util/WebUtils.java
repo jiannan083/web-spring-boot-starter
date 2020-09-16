@@ -1,14 +1,5 @@
 package cn.bfay.web.util;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.method.HandlerMethod;
-
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,6 +9,14 @@ import java.net.NetworkInterface;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.method.HandlerMethod;
 
 /**
  * WebUtils.
@@ -146,6 +145,25 @@ public class WebUtils extends org.springframework.web.util.WebUtils {
             return true;
         }
         return false;
+    }
+
+    /**
+     * 读取RequestParam值.
+     *
+     * @param request   request
+     * @param paramName 参数名
+     * @return String
+     */
+    public static String findParamValue(HttpServletRequest request, String paramName) {
+        String value = request.getParameter(paramName);
+        if (StringUtils.isNotBlank(value)) {
+            return value;
+        }
+        value = request.getHeader(paramName);
+        if (StringUtils.isNotBlank(value)) {
+            return value;
+        }
+        return getCookieValue(request, paramName);
     }
 
     /**

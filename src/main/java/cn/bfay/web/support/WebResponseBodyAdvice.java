@@ -1,6 +1,6 @@
 package cn.bfay.web.support;
 
-import cn.bfay.web.result.Result;
+import cn.bfay.web.result.BaseResult;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
@@ -33,7 +33,7 @@ public class WebResponseBodyAdvice implements ResponseBodyAdvice<Object> {
 
     @Override
     public boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType) {
-        return !Result.class.isAssignableFrom(returnType.getParameterType())
+        return !BaseResult.class.isAssignableFrom(returnType.getParameterType())
             && MappingJackson2HttpMessageConverter.class.isAssignableFrom(converterType);
     }
 
@@ -45,7 +45,7 @@ public class WebResponseBodyAdvice implements ResponseBodyAdvice<Object> {
                                   ServerHttpRequest serverHttpRequest,
                                   ServerHttpResponse serverHttpResponse) {
         if (null == resultData) {
-            return Result.buildSuccess();
+            return BaseResult.buildSuccess();
         }
 
         if (!shouldBuildResult(serverHttpRequest)) {
@@ -55,10 +55,10 @@ public class WebResponseBodyAdvice implements ResponseBodyAdvice<Object> {
         if (resultData instanceof MappingJacksonValue) {
             MappingJacksonValue result = (MappingJacksonValue) resultData;
             Object body = result.getValue();
-            result.setValue(body == null ? Result.buildSuccess() : Result.buildSuccess(body));
+            result.setValue(body == null ? BaseResult.buildSuccess() : BaseResult.buildSuccess(body));
             return result;
         }
-        return Result.buildSuccess(resultData);
+        return BaseResult.buildSuccess(resultData);
     }
 
     private boolean shouldBuildResult(ServerHttpRequest request) {
