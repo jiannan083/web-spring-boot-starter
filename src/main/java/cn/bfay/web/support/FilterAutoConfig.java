@@ -72,7 +72,7 @@ public class FilterAutoConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "szyx.web", value = "cors-enabled", havingValue = "true")
+    @ConditionalOnProperty(prefix = "bfay.web", value = "cors-enabled", havingValue = "true")
     public FilterRegistrationBean<CorsFilter> corsFilterRegistrationBean() {
         String corsAllowedOrigin = webProperties.getCorsAllowedOrigin();
         CorsConfiguration config = new CorsConfiguration();

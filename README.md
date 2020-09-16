@@ -61,10 +61,10 @@ lombok  `--`
 ```
 ### 四. 支持跨域处理，默认不开启  
 使用方式：  
-第一步：启用，配置文件添加 szyx.web.cors-enabled=true  
-第二步：不配置默认全放行；配置放行域名，配置文件添加 szyx.web.cors-allowed-origin=放行域名 多个使用英文逗号隔开  
+第一步：启用，配置文件添加 bfay.web.cors-enabled=true  
+第二步：不配置默认全放行；配置放行域名，配置文件添加 bfay.web.cors-allowed-origin=放行域名 多个使用英文逗号隔开  
 ### 五. 支持Xss攻击处理  
 ### 六. trace日志  
 1. 默认支持trace日志打印  
-2. 添加日志标识。默认标识参数是userid；配置文件添加 szyx.web.user-sign=标识名 自定义用户标识符。
+2. 添加日志标识。默认标识参数是userid；配置文件添加 bfay.web.user-sign=标识名 自定义用户标识符。
 依次从"request参数"-->"header"-->"cookie"中获取用户标识。  
